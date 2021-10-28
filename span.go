@@ -38,6 +38,9 @@ func newSpan(operationName string, tracer *tracerImpl, sso []opentracing.StartSp
 		sp.raw.Context.TraceID = opts.SetTraceID
 		sp.raw.Context.SpanID = opts.SetSpanID
 		sp.raw.ParentSpanID = opts.SetParentSpanID
+	}
+
+	if opts.SetSampled != "" {
 		sp.raw.Context.Sampled = opts.SetSampled
 	}
 
