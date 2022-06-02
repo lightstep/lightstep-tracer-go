@@ -1,6 +1,8 @@
 # Changelog
 
-## [Pending Release](https://github.com/lightstep/lightstep-tracer-go/compare/v0.24.0...HEAD)
+## [Pending Release](https://github.com/lightstep/lightstep-tracer-go/compare/v0.25.0...HEAD)
+* use SetSampled option even if SetTraceID isn't used (#285)
+* Update gopsutil to v3.21.3 (#288)
 
 ## [v0.25.0](https://github.com/lightstep/lightstep-tracer-go/compare/v0.24.0...v0.25.0)
 * bump gogo/protobuf dependencies (#274)
