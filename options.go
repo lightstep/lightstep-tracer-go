@@ -286,26 +286,6 @@ func (opts *Options) Initialize() error {
 		}
 	}
 
-	if opts.SystemMetrics.Endpoint.Host == "" {
-		opts.SystemMetrics.Endpoint.Host = DefaultSystemMetricsHost
-	}
-
-	if opts.SystemMetrics.Endpoint.Port <= 0 {
-		opts.SystemMetrics.Endpoint.Port = DefaultSecurePort
-
-		if opts.SystemMetrics.Endpoint.Plaintext {
-			opts.SystemMetrics.Endpoint.Port = DefaultPlainPort
-		}
-	}
-
-	if opts.SystemMetrics.MeasurementFrequency <= 0 {
-		opts.SystemMetrics.MeasurementFrequency = DefaultSystemMetricsMeasurementFrequency
-	}
-
-	if opts.SystemMetrics.Timeout <= 0 {
-		opts.SystemMetrics.Timeout = DefaultSystemMetricsTimeout
-	}
-
 	return nil
 }
 
@@ -318,12 +298,6 @@ func (opts *Options) Validate() error {
 
 	if len(opts.Collector.CustomCACertFile) != 0 {
 		if _, err := os.Stat(opts.Collector.CustomCACertFile); os.IsNotExist(err) {
-			return err
-		}
-	}
-
-	if !opts.SystemMetrics.Disabled && len(opts.SystemMetrics.Endpoint.CustomCACertFile) != 0 {
-		if _, err := os.Stat(opts.SystemMetrics.Endpoint.CustomCACertFile); os.IsNotExist(err) {
 			return err
 		}
 	}
@@ -375,6 +349,7 @@ type lightStepStartSpanOption interface {
 }
 
 type SetSampled string
+
 func (s SetSampled) Apply(sso *opentracing.StartSpanOptions) {}
 
 func (s SetSampled) applyLS(sso *startSpanOptions) {
@@ -390,7 +365,7 @@ type startSpanOptions struct {
 	SetSpanID       uint64
 	SetParentSpanID uint64
 	SetTraceID      uint64
-	SetSampled	string
+	SetSampled      string
 }
 
 func newStartSpanOptions(sso []opentracing.StartSpanOption) startSpanOptions {

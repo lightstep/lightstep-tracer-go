@@ -5,14 +5,10 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/lightstep/lightstep-tracer-go/constants"
-	"github.com/lightstep/lightstep-tracer-go/internal/metrics"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -47,17 +43,13 @@ type tracerImpl struct {
 	opts       Options
 
 	// report loop management
-	closeOnce                     sync.Once
-	closeReportLoopChannel        chan struct{}
-	closeSystemMetricsLoopChannel chan struct{}
-	reportLoopClosedChannel       chan struct{}
+	closeOnce               sync.Once
+	closeReportLoopChannel  chan struct{}
+	reportLoopClosedChannel chan struct{}
 
 	converter   *protoConverter
 	accessToken string
 	attributes  map[string]string
-
-	metricsReporter             *metrics.Reporter
-	metricsMeasurementFrequency time.Duration
 
 	//////////////////////////////////////////////////////////
 	// MUTABLE MUTABLE MUTABLE MUTABLE MUTABLE MUTABLE MUTABLE
@@ -137,22 +129,6 @@ func CreateTracer(opts Options) (Tracer, error) {
 		converter:               newProtoConverter(opts),
 		accessToken:             opts.AccessToken,
 		attributes:              attributes,
-		metricsReporter: metrics.NewReporter(
-			metrics.WithReporterTracerID(tracerID),
-			metrics.WithReporterAccessToken(opts.AccessToken),
-			metrics.WithReporterTimeout(opts.SystemMetrics.Timeout),
-			metrics.WithReporterAddress(opts.SystemMetrics.Endpoint.urlWithoutPath()),
-			metrics.WithReporterAttributes(map[string]string{
-				metrics.ReporterPlatformKey:        TracerPlatformValue,
-				metrics.ReporterPlatformVersionKey: runtime.Version(),
-				metrics.ReporterVersionKey:         TracerVersionValue,
-				constants.HostnameKey:              attributes[constants.HostnameKey],
-				constants.ServiceVersionKey:        attributes[constants.ServiceVersionKey],
-				constants.ComponentNameKey:         attributes[constants.ComponentNameKey],
-			}),
-			metrics.WithReporterMeasurementDuration(opts.SystemMetrics.MeasurementFrequency),
-		),
-		metricsMeasurementFrequency: opts.SystemMetrics.MeasurementFrequency,
 	}
 
 	impl.buffer.setCurrent(now)
@@ -182,12 +158,6 @@ func CreateTracer(opts Options) (Tracer, error) {
 	}
 	for builtin, propagator := range opts.Propagators {
 		impl.propagators[builtin] = propagator
-	}
-
-	// allow disabling of system metrics via environment variable:
-	// LS_METRICS_ENABLED=false
-	if !opts.SystemMetrics.Disabled && strings.ToLower(os.Getenv("LS_METRICS_ENABLED")) != "false" {
-		go impl.systemMetricsLoop()
 	}
 
 	return impl, nil
@@ -256,9 +226,6 @@ func (tracer *tracerImpl) Close(ctx context.Context) {
 		// notify report loop that we are closing
 		if tracer.closeReportLoopChannel != nil {
 			close(tracer.closeReportLoopChannel)
-		}
-		if tracer.closeSystemMetricsLoopChannel != nil {
-			close(tracer.closeSystemMetricsLoopChannel)
 		}
 		select {
 		case <-tracer.reportLoopClosedChannel:
@@ -527,44 +494,6 @@ func (tracer *tracerImpl) reportLoop() {
 			}
 		case <-tracer.closeReportLoopChannel:
 			close(tracer.reportLoopClosedChannel)
-			return
-		}
-	}
-}
-
-func (tracer *tracerImpl) systemMetricsLoop() {
-	ticker := time.NewTicker(tracer.metricsMeasurementFrequency)
-	intervals := int64(1)
-
-	measure := func(intervals int64) int64 {
-		ctx, cancel := context.WithTimeout(context.Background(), tracer.metricsMeasurementFrequency)
-		defer cancel()
-
-		if err := tracer.metricsReporter.Measure(ctx, intervals); err != nil {
-			emitEvent(newEventSystemMetricsMeasurementFailed(err))
-			intervals++
-		} else {
-			intervals = 1
-		}
-		emitEvent(newEventSystemMetricsStatusReport(
-			tracer.metricsReporter.Start,
-			tracer.metricsReporter.End,
-			tracer.metricsReporter.MetricsCount),
-		)
-		return intervals
-	}
-
-	intervals = measure(intervals)
-
-	for {
-		select {
-		case <-ticker.C:
-			if tracer.disabled {
-				return
-			}
-
-			intervals = measure(intervals)
-		case <-tracer.closeSystemMetricsLoopChannel:
 			return
 		}
 	}
