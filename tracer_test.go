@@ -38,7 +38,6 @@ var _ = Describe("Tracer", func() {
 
 	BeforeEach(func() {
 		opts.UseGRPC = true
-		opts.SystemMetrics.Disabled = true
 
 		fakeClient = new(collectorpbfakes.FakeCollectorServiceClient)
 		fakeClient.ReportReturns(&collectorpb.ReportResponse{}, nil)
