@@ -1,5 +1,7 @@
 # lightstep-tracer-go
 
+> ❗ **This instrumentation is no longer recommended**. Please review [documentation on setting up and configuring the OpenTelemetry Go Launcher](https://github.com/lightstep/otel-launcher-go) for more information on migrating to OpenTelemetry.
+
 [![Circle CI](https://circleci.com/gh/lightstep/lightstep-tracer-go.svg?style=shield)](https://circleci.com/gh/lightstep/lightstep-tracer-go)
 [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 [![GoDoc](https://godoc.org/github.com/lightstep/lightstep-tracer-go?status.svg)](https://godoc.org/github.com/lightstep/lightstep-tracer-go)
