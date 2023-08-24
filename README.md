@@ -1,8 +1,13 @@
-# lightstep-tracer-go
+# lightstep-tracer-go [Deprecated]
 
 [![Circle CI](https://circleci.com/gh/lightstep/lightstep-tracer-go.svg?style=shield)](https://circleci.com/gh/lightstep/lightstep-tracer-go)
 [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 [![GoDoc](https://godoc.org/github.com/lightstep/lightstep-tracer-go?status.svg)](https://godoc.org/github.com/lightstep/lightstep-tracer-go)
+
+In August 2023, [Lightstep became ServiceNow
+Cloud](https://docs.lightstep.com/docs/banner-faq) Observability. To ease the
+transition, all code artifacts will continue to use the Lightstep name. You
+don't need to do anything to keep using this repository.
 
 The LightStep distributed tracing library for Go.
 
